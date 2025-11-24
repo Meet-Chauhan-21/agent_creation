@@ -71,6 +71,9 @@ export const auth = {
 export const users = {
   getProfile: () => api.get('/users/me'),
   updateProfile: (data) => api.put('/users/me', data),
+  updatePassword: (data) => api.put('/users/me/password', data),
+  getProjects: () => api.get('/users/me/projects'),
+  getWorkflows: () => api.get('/users/me/workflows'),
 };
 
 export const projects = {
@@ -78,6 +81,7 @@ export const projects = {
   getOne: (id) => api.get(`/projects/${id}`),
   create: (data) => api.post('/projects', data),
   update: (id, data) => api.put(`/projects/${id}`, data),
+  duplicate: (id) => api.post(`/projects/${id}/duplicate`),
   delete: (id) => api.delete(`/projects/${id}`),
 };
 

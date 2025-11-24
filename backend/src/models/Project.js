@@ -22,6 +22,16 @@ const projectSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    tags: {
+      type: [String],
+      default: [],
+      validate: {
+        validator: function(tags) {
+          return tags.length <= 10;
+        },
+        message: 'Cannot have more than 10 tags'
+      }
+    },
     settings: {
       type: mongoose.Schema.Types.Mixed,
       default: {},

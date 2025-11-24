@@ -36,10 +36,11 @@ export default function Navbar() {
           <div className="flex items-center space-x-4">
             <Link
               to="/profile"
-              className="group flex items-center space-x-2 text-sm text-white bg-gradient-to-r from-primary-600 to-primary-700 dark:from-primary-500 dark:to-primary-600 hover:from-primary-700 hover:to-primary-800 dark:hover:from-primary-600 dark:hover:to-primary-700 px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary-500/50 dark:hover:shadow-primary-600/50"
+              className="group relative flex items-center space-x-2 text-sm text-primary-600 dark:text-primary-400 border-2 border-primary-600 dark:border-primary-500 px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:text-white dark:hover:text-white overflow-hidden hover:shadow-xl hover:shadow-primary-500/30 dark:hover:shadow-primary-600/30"
             >
-              <User className="w-4 h-4 transition-transform group-hover:rotate-12" />
-              <span>{user?.name || user?.email}</span>
+              <span className="absolute inset-0 bg-gradient-to-r from-primary-600 via-purple-600 to-primary-700 dark:from-primary-500 dark:via-purple-500 dark:to-primary-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out origin-left"></span>
+              <User className="w-4 h-4 relative z-10 transition-all duration-300 group-hover:rotate-[360deg] group-hover:scale-110" />
+              <span className="relative z-10 font-semibold">{user?.name || user?.email}</span>
             </Link>
             <button
               onClick={toggleTheme}

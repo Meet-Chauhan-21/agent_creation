@@ -69,6 +69,23 @@ export const useProjectStore = create((set, get) => ({
     }
   },
 
+  duplicateProject: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await projects.duplicate(id);
+      const duplicatedProject = response.data.data.project;
+      set((state) => ({
+        projects: [duplicatedProject, ...state.projects],
+        loading: false,
+      }));
+      return { success: true, project: duplicatedProject };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to duplicate project';
+      set({ error: errorMessage, loading: false });
+      return { success: false, error: errorMessage };
+    }
+  },
+
   deleteProject: async (id) => {
     set({ loading: true, error: null });
     try {

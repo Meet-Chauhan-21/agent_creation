@@ -83,7 +83,7 @@ const getWorkflow = async (req, res, next) => {
 const createWorkflow = async (req, res, next) => {
   try {
     const { projectId } = req.params;
-    const { name, description, nodes, edges, settings } = req.body;
+    const { name, description, nodes, edges, settings, tags } = req.body;
 
     // Verify project ownership
     const project = await Project.findById(projectId);
@@ -108,6 +108,7 @@ const createWorkflow = async (req, res, next) => {
       nodes: nodes || [],
       edges: edges || [],
       settings: settings || {},
+      tags: tags || [],
       createdBy: req.user._id,
     });
 
@@ -147,7 +148,7 @@ const updateWorkflow = async (req, res, next) => {
     }
 
     // Check version for optimistic locking
-    const { version, name, description, nodes, edges, settings, isActive } = req.body;
+    const { version, name, description, nodes, edges, settings, isActive, tags } = req.body;
     
     if (version !== undefined && version !== workflow.version) {
       return res.status(409).json({
@@ -163,6 +164,7 @@ const updateWorkflow = async (req, res, next) => {
     if (edges) workflow.edges = edges;
     if (settings) workflow.settings = { ...workflow.settings, ...settings };
     if (isActive !== undefined) workflow.isActive = isActive;
+    if (tags !== undefined) workflow.tags = tags;
 
     await workflow.save();
 

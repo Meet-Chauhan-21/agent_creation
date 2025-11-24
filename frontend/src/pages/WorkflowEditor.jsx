@@ -15,10 +15,15 @@ import Navbar from '../components/Navbar';
 import NodePalette from '../components/workflow/NodePalette';
 import NodePropertiesPanel from '../components/workflow/NodePropertiesPanel';
 import RunPanel from '../components/workflow/RunPanel';
+import CustomNode from '../components/workflow/CustomNode';
 import { Save, Play, ArrowLeft, Clock } from 'lucide-react';
 import { io } from 'socket.io-client';
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:4000';
+
+const nodeTypes = {
+  custom: CustomNode,
+};
 
 export default function WorkflowEditor() {
   const { workflowId } = useParams();
@@ -85,7 +90,7 @@ export default function WorkflowEditor() {
     (nodeType) => {
       const newNode = {
         id: `node-${Date.now()}`,
-        type: 'default',
+        type: 'custom',
         position: {
           x: Math.random() * 500,
           y: Math.random() * 300,
@@ -94,6 +99,7 @@ export default function WorkflowEditor() {
           label: nodeType.name,
           nodeType: nodeType.id,
           icon: nodeType.icon,
+          category: nodeType.category,
           parameters: {},
         },
       };
@@ -241,15 +247,16 @@ export default function WorkflowEditor() {
             onConnect={onConnect}
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
+            nodeTypes={nodeTypes}
             fitView
             className="dark:bg-[#0a0a0a]"
           >
             <Background className="dark:bg-[#0a0a0a]" gap={16} color="#4B5563" />
-            <Controls className="dark:bg-[#1a1a1a] dark:border-gray-700" />
+            <Controls />
             <MiniMap 
-              className="dark:bg-[#1a1a1a] dark:border-gray-700"
               maskColor="rgba(0, 0, 0, 0.6)"
               nodeColor="#a855f7"
+              nodeBorderRadius={8}
             />
           </ReactFlow>
         </div>

@@ -18,6 +18,16 @@ const workflowSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    tags: {
+      type: [String],
+      default: [],
+      validate: {
+        validator: function(tags) {
+          return tags.length <= 10;
+        },
+        message: 'Cannot have more than 10 tags'
+      }
+    },
     nodes: [
       {
         id: { type: String, required: true },

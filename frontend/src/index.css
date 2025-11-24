@@ -235,3 +235,117 @@
 .btn:active {
   transform: translateY(0);
 }
+
+/* ReactFlow Controls - Light Mode */
+.react-flow__controls {
+  background: white !important;
+  border: 2px solid #e5e7eb !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 0.5rem !important;
+}
+
+.react-flow__controls button {
+  background: white !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  color: #374151 !important;
+}
+
+.react-flow__controls button:hover {
+  background: #f3f4f6 !important;
+  border-color: #7c3aed !important;
+  color: #7c3aed !important;
+}
+
+.react-flow__controls button svg {
+  fill: #374151 !important;
+}
+
+.react-flow__controls button:hover svg {
+  fill: #7c3aed !important;
+}
+
+/* ReactFlow Controls - Dark Mode */
+.dark .react-flow__controls {
+  background: #1a1a1a !important;
+  border: 2px solid #374151 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark .react-flow__controls button {
+  background: #1a1a1a !important;
+  border-bottom: 1px solid #374151 !important;
+  color: #d1d5db !important;
+}
+
+.dark .react-flow__controls button:hover {
+  background: #1f2937 !important;
+  border-color: #7c3aed !important;
+  color: white !important;
+}
+
+.dark .react-flow__controls button svg {
+  fill: #d1d5db !important;
+}
+
+.dark .react-flow__controls button:hover svg {
+  fill: white !important;
+}
+
+/* ReactFlow MiniMap */
+.react-flow__minimap {
+  background: white !important;
+  border: 2px solid #e5e7eb !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 0.5rem !important;
+}
+
+.dark .react-flow__minimap {
+  background: #1a1a1a !important;
+  border: 2px solid #374151 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Remove ALL selection rectangle backgrounds completely */
+.react-flow__node,
+.react-flow__node.selected,
+.react-flow__node.selectable,
+.react-flow__node:focus,
+.react-flow__node:focus-visible,
+.react-flow__node:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.react-flow__node::before,
+.react-flow__node::after,
+.react-flow__node.selected::before,
+.react-flow__node.selected::after,
+.react-flow__node:focus::before,
+.react-flow__node:focus::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Hide all selection boxes and rectangles */
+.react-flow__nodesselection,
+.react-flow__nodesselection-rect,
+.react-flow__selection {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Remove ReactFlow default selection styles */
+.react-flow__node.selected .react-flow__handle {
+  opacity: 1 !important;
+}
+
+/* Force remove any outline or background */
+.react-flow__node * {
+  outline: none !important;
+}
+
+.react-flow__pane {
+  cursor: default !important;
+}
+

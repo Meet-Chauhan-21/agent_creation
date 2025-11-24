@@ -60,7 +60,7 @@ const getProject = async (req, res, next) => {
 // @access  Private
 const createProject = async (req, res, next) => {
   try {
-    const { name, description, coverImage, settings } = req.body;
+    const { name, description, coverImage, settings, tags } = req.body;
 
     const project = await Project.create({
       owner: req.user._id,
@@ -68,6 +68,7 @@ const createProject = async (req, res, next) => {
       description,
       coverImage,
       settings,
+      tags,
     });
 
     res.status(201).json({
@@ -104,12 +105,13 @@ const updateProject = async (req, res, next) => {
       });
     }
 
-    const { name, description, coverImage, settings } = req.body;
+    const { name, description, coverImage, settings, tags } = req.body;
 
     if (name) project.name = name;
     if (description !== undefined) project.description = description;
     if (coverImage !== undefined) project.coverImage = coverImage;
     if (settings) project.settings = settings;
+    if (tags !== undefined) project.tags = tags;
 
     await project.save();
 
@@ -118,6 +120,65 @@ const updateProject = async (req, res, next) => {
       message: 'Project updated successfully',
       data: {
         project,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Duplicate project
+// @route   POST /api/projects/:id/duplicate
+// @access  Private
+const duplicateProject = async (req, res, next) => {
+  try {
+    const project = await Project.findById(req.params.id);
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found',
+      });
+    }
+
+    // Check ownership
+    if (project.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to duplicate this project',
+      });
+    }
+
+    // Create duplicate project
+    const duplicateProject = await Project.create({
+      owner: req.user._id,
+      name: `${project.name} (Copy)`,
+      description: project.description,
+      coverImage: project.coverImage,
+      settings: project.settings,
+    });
+
+    // Duplicate all workflows in project
+    const workflows = await Workflow.find({ projectId: project._id });
+    const duplicatedWorkflows = await Promise.all(
+      workflows.map(async (workflow) => {
+        return await Workflow.create({
+          projectId: duplicateProject._id,
+          name: workflow.name,
+          description: workflow.description,
+          nodes: workflow.nodes,
+          edges: workflow.edges,
+          version: 1,
+        });
+      })
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Project duplicated successfully',
+      data: {
+        project: duplicateProject,
+        workflowCount: duplicatedWorkflows.length,
       },
     });
   } catch (error) {
@@ -167,5 +228,6 @@ module.exports = {
   getProject,
   createProject,
   updateProject,
+  duplicateProject,
   deleteProject,
 };
