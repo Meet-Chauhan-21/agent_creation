@@ -80,6 +80,7 @@ export const useWorkflowStore = create((set, get) => ({
       set((state) => ({
         workflows: [duplicatedWorkflow, ...state.workflows],
         loading: false,
+        error: null,
       }));
       return { success: true, workflow: duplicatedWorkflow };
     } catch (error) {

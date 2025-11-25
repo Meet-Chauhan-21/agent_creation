@@ -150,11 +150,12 @@ const duplicateProject = async (req, res, next) => {
     }
 
     // Create duplicate project
-    const duplicateProject = await Project.create({
+    const duplicatedProject = await Project.create({
       owner: req.user._id,
       name: `${project.name} (Copy)`,
       description: project.description,
       coverImage: project.coverImage,
+      tags: project.tags,
       settings: project.settings,
     });
 
@@ -163,9 +164,10 @@ const duplicateProject = async (req, res, next) => {
     const duplicatedWorkflows = await Promise.all(
       workflows.map(async (workflow) => {
         return await Workflow.create({
-          projectId: duplicateProject._id,
+          projectId: duplicatedProject._id,
           name: workflow.name,
           description: workflow.description,
+          tags: workflow.tags,
           nodes: workflow.nodes,
           edges: workflow.edges,
           version: 1,
@@ -177,7 +179,7 @@ const duplicateProject = async (req, res, next) => {
       success: true,
       message: 'Project duplicated successfully',
       data: {
-        project: duplicateProject,
+        project: duplicatedProject,
         workflowCount: duplicatedWorkflows.length,
       },
     });

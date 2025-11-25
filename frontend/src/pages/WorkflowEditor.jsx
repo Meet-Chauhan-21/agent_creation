@@ -12,6 +12,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { useWorkflowStore } from '../store/workflowStore';
 import Navbar from '../components/Navbar';
+import UnsavedChangesModal from '../components/UnsavedChangesModal';
 import NodePalette from '../components/workflow/NodePalette';
 import NodePropertiesPanel from '../components/workflow/NodePropertiesPanel';
 import RunPanel from '../components/workflow/RunPanel';
@@ -36,6 +37,9 @@ export default function WorkflowEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -52,6 +56,36 @@ export default function WorkflowEditor() {
       }
     };
   }, [workflowId]);
+
+  // Track changes to nodes and edges
+  useEffect(() => {
+    if (nodes.length > 0 || edges.length > 0) {
+      // Don't mark as changed on initial load
+      const isInitialLoad = !lastSaved && currentWorkflow;
+      if (!isInitialLoad && currentWorkflow) {
+        // Check if there are actual changes
+        const nodesChanged = JSON.stringify(nodes) !== JSON.stringify(currentWorkflow.nodes || []);
+        const edgesChanged = JSON.stringify(edges) !== JSON.stringify(currentWorkflow.edges || []);
+        if (nodesChanged || edgesChanged) {
+          setHasUnsavedChanges(true);
+        }
+      }
+    }
+  }, [nodes, edges]);
+
+  // Warn before closing/refreshing with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const loadWorkflow = async () => {
     const workflow = await fetchWorkflow(workflowId);
@@ -74,6 +108,7 @@ export default function WorkflowEditor() {
         },
       };
       setEdges((eds) => addEdge(edge, eds));
+      setHasUnsavedChanges(true);
     },
     [setEdges]
   );
@@ -104,6 +139,7 @@ export default function WorkflowEditor() {
         },
       };
       setNodes((nds) => [...nds, newNode]);
+      setHasUnsavedChanges(true);
     },
     [setNodes]
   );
@@ -118,6 +154,7 @@ export default function WorkflowEditor() {
           return node;
         })
       );
+      setHasUnsavedChanges(true);
     },
     [setNodes]
   );
@@ -145,6 +182,7 @@ export default function WorkflowEditor() {
     if (result.success) {
       setLastSaved(new Date());
       setSaveSuccess(true);
+      setHasUnsavedChanges(false);
       setTimeout(() => setSaveSuccess(false), 3000);
     }
     setIsSaving(false);
@@ -162,6 +200,19 @@ export default function WorkflowEditor() {
     }
   };
 
+  const handleSaveAndLeave = async () => {
+    await handleSave();
+    if (pendingNavigation) {
+      navigate(pendingNavigation);
+    }
+  };
+
+  const handleLeaveWithoutSaving = () => {
+    if (pendingNavigation) {
+      navigate(pendingNavigation);
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-[#0a0a0a]">
       <Navbar />
@@ -171,7 +222,14 @@ export default function WorkflowEditor() {
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => navigate(`/projects/${currentWorkflow?.projectId}`)}
+              onClick={() => {
+                if (hasUnsavedChanges) {
+                  setPendingNavigation(`/projects/${currentWorkflow?.projectId}`);
+                  setShowUnsavedModal(true);
+                } else {
+                  navigate(`/projects/${currentWorkflow?.projectId}`);
+                }
+              }}
               className="group relative flex items-center space-x-2 text-primary-600 dark:text-primary-400 border-2 border-primary-600 dark:border-primary-500 px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:text-white dark:hover:text-white overflow-hidden"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-700 dark:from-primary-500 dark:to-primary-600 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></span>
@@ -179,9 +237,16 @@ export default function WorkflowEditor() {
               <span className="relative z-10">Back</span>
             </button>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {currentWorkflow?.name || 'Workflow'}
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {currentWorkflow?.name || 'Workflow'}
+                </h1>
+                {hasUnsavedChanges && (
+                  <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-medium rounded-full">
+                    Unsaved
+                  </span>
+                )}
+              </div>
               {lastSaved && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1">
                   <Clock className="w-3 h-3" />
@@ -279,6 +344,14 @@ export default function WorkflowEditor() {
           />
         )}
       </div>
+
+      {/* Unsaved Changes Modal */}
+      <UnsavedChangesModal
+        isOpen={showUnsavedModal}
+        setIsOpen={setShowUnsavedModal}
+        onSave={handleSaveAndLeave}
+        onDontSave={handleLeaveWithoutSaving}
+      />
     </div>
   );
 }

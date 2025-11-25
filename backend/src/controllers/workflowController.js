@@ -207,6 +207,7 @@ const duplicateWorkflow = async (req, res, next) => {
       projectId: workflow.projectId,
       name: `${workflow.name} (Copy)`,
       description: workflow.description,
+      tags: workflow.tags,
       nodes: workflow.nodes,
       edges: workflow.edges,
       settings: workflow.settings,

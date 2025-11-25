@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useProjectStore } from '../store/projectStore';
 import { useWorkflowStore } from '../store/workflowStore';
 import Navbar from '../components/Navbar';
+import ConfirmModal from '../components/ConfirmModal';
 import { Plus, Workflow as WorkflowIcon, Play, Copy, Trash2, Calendar, ArrowLeft, X, Edit } from 'lucide-react';
 
 export default function ProjectView() {
@@ -17,6 +18,9 @@ export default function ProjectView() {
   const [workflowDescription, setWorkflowDescription] = useState('');
   const [workflowTags, setWorkflowTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
+  const [duplicatingWorkflowId, setDuplicatingWorkflowId] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, workflowId: null });
+  const [successModal, setSuccessModal] = useState({ isOpen: false, message: '' });
 
   useEffect(() => {
     if (projectId) {
@@ -89,13 +93,32 @@ export default function ProjectView() {
 
   const handleDuplicateWorkflow = async (e, workflowId) => {
     e.stopPropagation();
-    await duplicateWorkflow(workflowId);
+    setDuplicatingWorkflowId(workflowId);
+    try {
+      const result = await duplicateWorkflow(workflowId);
+      if (result.success) {
+        console.log('Workflow duplicated successfully');
+        // Fetch workflows again to ensure UI is in sync with backend
+        await fetchWorkflows(projectId);
+      } else {
+        console.error('Failed to duplicate workflow:', result.error);
+      }
+    } catch (error) {
+      console.error('Error duplicating workflow:', error);
+    } finally {
+      setDuplicatingWorkflowId(null);
+    }
   };
 
-  const handleDeleteWorkflow = async (e, workflowId) => {
+  const handleDeleteWorkflow = (e, workflowId) => {
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this workflow?')) {
-      await deleteWorkflow(workflowId);
+    setDeleteModal({ isOpen: true, workflowId });
+  };
+
+  const confirmDeleteWorkflow = async () => {
+    if (deleteModal.workflowId) {
+      await deleteWorkflow(deleteModal.workflowId);
+      setDeleteModal({ isOpen: false, workflowId: null });
     }
   };
 
@@ -223,10 +246,17 @@ export default function ProjectView() {
                         e.stopPropagation();
                         handleDuplicateWorkflow(e, workflow._id);
                       }}
-                      className="btn btn-secondary p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      disabled={duplicatingWorkflowId === workflow._id}
+                      className={`btn btn-secondary p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                        duplicatingWorkflowId === workflow._id ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                       title="Duplicate Workflow"
                     >
-                      <Copy className="w-4 h-4" />
+                      {duplicatingWorkflowId === workflow._id ? (
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
                     </button>
                     <button
                       onClick={(e) => {
@@ -437,6 +467,30 @@ export default function ProjectView() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        setIsOpen={(isOpen) => setDeleteModal({ isOpen, workflowId: null })}
+        onConfirm={confirmDeleteWorkflow}
+        title="Delete Workflow?"
+        message="Are you sure you want to delete this workflow? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
+
+      {/* Success Modal */}
+      <ConfirmModal
+        isOpen={successModal.isOpen}
+        setIsOpen={(isOpen) => setSuccessModal({ isOpen, message: '' })}
+        onConfirm={() => setSuccessModal({ isOpen: false, message: '' })}
+        title="Success!"
+        message={successModal.message}
+        confirmText="Got it!"
+        cancelText=""
+        type="success"
+      />
     </div>
   );
 }

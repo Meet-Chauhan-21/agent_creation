@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '../store/projectStore';
 import Navbar from '../components/Navbar';
+import ConfirmModal from '../components/ConfirmModal';
 import { Plus, Folder, Calendar, Trash2, Edit, Copy, X } from 'lucide-react';
 
 export default function Dashboard() {
@@ -14,6 +15,9 @@ export default function Dashboard() {
   const [projectDescription, setProjectDescription] = useState('');
   const [projectTags, setProjectTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
+  const [duplicatingProjectId, setDuplicatingProjectId] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, projectId: null });
+  const [successModal, setSuccessModal] = useState({ isOpen: false, message: '' });
 
   useEffect(() => {
     fetchProjects();
@@ -80,13 +84,30 @@ export default function Dashboard() {
 
   const handleDuplicateProject = async (e, projectId) => {
     e.stopPropagation();
-    await duplicateProject(projectId);
+    setDuplicatingProjectId(projectId);
+    try {
+      const result = await duplicateProject(projectId);
+      if (result.success) {
+        console.log('Project duplicated successfully');
+      } else {
+        console.error('Failed to duplicate project:', result.error);
+      }
+    } catch (error) {
+      console.error('Error duplicating project:', error);
+    } finally {
+      setDuplicatingProjectId(null);
+    }
   };
 
-  const handleDeleteProject = async (e, projectId) => {
+  const handleDeleteProject = (e, projectId) => {
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this project? This will also delete all workflows.')) {
-      await deleteProject(projectId);
+    setDeleteModal({ isOpen: true, projectId });
+  };
+
+  const confirmDeleteProject = async () => {
+    if (deleteModal.projectId) {
+      await deleteProject(deleteModal.projectId);
+      setDeleteModal({ isOpen: false, projectId: null });
     }
   };
 
@@ -234,10 +255,17 @@ export default function Dashboard() {
                           e.stopPropagation();
                           handleDuplicateProject(e, project._id);
                         }}
-                        className="btn btn-secondary p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        disabled={duplicatingProjectId === project._id}
+                        className={`btn btn-secondary p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                          duplicatingProjectId === project._id ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                         title="Duplicate Project"
                       >
-                        <Copy className="w-4 h-4" />
+                        {duplicatingProjectId === project._id ? (
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
                       </button>
                       <button
                         onClick={(e) => {
@@ -449,6 +477,30 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        setIsOpen={(isOpen) => setDeleteModal({ isOpen, projectId: null })}
+        onConfirm={confirmDeleteProject}
+        title="Delete Project?"
+        message="Are you sure you want to delete this project? This will also delete all workflows. This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
+
+      {/* Success Modal */}
+      <ConfirmModal
+        isOpen={successModal.isOpen}
+        setIsOpen={(isOpen) => setSuccessModal({ isOpen, message: '' })}
+        onConfirm={() => setSuccessModal({ isOpen: false, message: '' })}
+        title="Success!"
+        message={successModal.message}
+        confirmText="Got it!"
+        cancelText=""
+        type="success"
+      />
     </div>
   );
 }

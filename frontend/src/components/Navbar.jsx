@@ -1,15 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
+import ConfirmModal from './ConfirmModal';
 import { LogOut, User, Workflow, Sun, Moon } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
+  const [logoutModal, setLogoutModal] = useState(false);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
     await logout();
     navigate('/login');
   };
@@ -60,6 +66,18 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmModal
+        isOpen={logoutModal}
+        setIsOpen={setLogoutModal}
+        onConfirm={confirmLogout}
+        title="Logout?"
+        message="Are you sure you want to logout? Any unsaved changes will be lost."
+        confirmText="Logout"
+        cancelText="Cancel"
+        type="logout"
+      />
     </nav>
   );
 }

@@ -77,6 +77,7 @@ export const useProjectStore = create((set, get) => ({
       set((state) => ({
         projects: [duplicatedProject, ...state.projects],
         loading: false,
+        error: null,
       }));
       return { success: true, project: duplicatedProject };
     } catch (error) {
